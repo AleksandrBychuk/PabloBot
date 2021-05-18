@@ -10,6 +10,7 @@ using System.IO;
 using Newtonsoft.Json;
 using PabloBot.Services;
 using Microsoft.Extensions.Logging;
+using PabloBot.Modules;
 
 namespace PabloBot
 {
@@ -45,10 +46,14 @@ namespace PabloBot
             {
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableDms = false,
-                EnableMentionPrefix = true
+                EnableMentionPrefix = true,
+                DmHelp = true
             };
 
             Commands = Client.UseCommandsNext(commandsConfig);
+
+            Commands.RegisterCommands<DefaultCommands>();
+
             await Client.ConnectAsync();
             await Task.Delay(-1);
         }
