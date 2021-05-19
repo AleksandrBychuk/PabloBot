@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DSharpPlus.Interactivity;
 using DSharpPlus.EventArgs;
 using DSharpPlus.CommandsNext;
 using DSharpPlus;
@@ -11,13 +12,15 @@ using Newtonsoft.Json;
 using PabloBot.Services;
 using Microsoft.Extensions.Logging;
 using PabloBot.Modules;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace PabloBot
 {
     class PabloBot
     {
-        DiscordClient Client { get; set; }
-        CommandsNextExtension Commands { get; set; }
+        public DiscordClient Client { get; set; }
+        public CommandsNextExtension Commands { get; set; }
+        public InteractivityExtension Interactivity { get; set; }
         public async Task RunAsync()
         {
             var json = string.Empty;
@@ -41,6 +44,11 @@ namespace PabloBot
             Client = new DiscordClient(config);
 
             Client.Ready += OnClientReady;
+
+            Client.UseInteractivity(new InteractivityConfiguration
+            {
+                Timeout = TimeSpan.FromMinutes(2)
+            });
 
             var commandsConfig = new CommandsNextConfiguration
             {
