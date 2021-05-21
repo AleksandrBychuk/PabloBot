@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PabloBot.Services.Models.Profiles
 {
-    class Profile : Entity
+    public class Profile : Entity
     {
         public ulong DiscordId { get; set; }
         public ulong GuildId { get; set; }

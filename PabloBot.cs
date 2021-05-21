@@ -13,6 +13,8 @@ using PabloBot.Services;
 using Microsoft.Extensions.Logging;
 using PabloBot.Modules;
 using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using PabloBot.Services.Models.Profiles.Services;
 
 namespace PabloBot
 {
@@ -21,14 +23,15 @@ namespace PabloBot
         public DiscordClient Client { get; set; }
         public CommandsNextExtension Commands { get; set; }
         public InteractivityExtension Interactivity { get; set; }
-        public async Task RunAsync()
+
+        public PabloBot(IServiceProvider services)
         {
             var json = string.Empty;
-            using (var fs = File.OpenRead("../../../config.json"))
+            using (var fs = File.OpenRead("config.json"))
             {
                 using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                 {
-                    json = await sr.ReadToEndAsync().ConfigureAwait(false);
+                    json = sr.ReadToEnd();
                 }
             }
 
@@ -55,17 +58,17 @@ namespace PabloBot
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableDms = false,
                 EnableMentionPrefix = true,
-                DmHelp = true
+                DmHelp = true,
+                Services = services
             };
 
             Commands = Client.UseCommandsNext(commandsConfig);
 
             Commands.RegisterCommands<DefaultCommands>();
+            Commands.RegisterCommands<ProfileCommands>();
 
-            await Client.ConnectAsync();
-            await Task.Delay(-1);
+            Client.ConnectAsync();
         }
-
         private Task OnClientReady(DiscordClient k, ReadyEventArgs e)
         {
             return Task.CompletedTask;
