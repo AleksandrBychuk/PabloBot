@@ -24,11 +24,12 @@ namespace PabloBot.Services.Models.Profiles.Services
             var profile = await ((IAsyncEnumerable<Profile>)_context.Profiles).Where(p => p.GuildId == guildId).FirstOrDefaultAsync(p => p.DiscordId == discordId).ConfigureAwait(false);
 
             if (profile != null) return profile;
-
-            profile = new Profile { DiscordId = discordId, GuildId = guildId };
-            _context.Add(profile);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-
+            else
+            {
+                profile = new Profile { DiscordId = discordId, GuildId = guildId };
+                _context.Add(profile);
+                await _context.SaveChangesAsync().ConfigureAwait(false);
+            }
             return profile;
         }
     }

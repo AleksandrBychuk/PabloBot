@@ -21,7 +21,6 @@ namespace PabloBot.Modules
 
         [Command("plus")]
         [Description("Складывает два числа. Пример: ?add 2 3.")]
-        //[RequireRoles(RoleCheckMode.All, "Модерация")]
         public async Task Plus(CommandContext ctx, [Description("Первое число")] int numberOne, [Description("Второе число")] int numberTwo)
         {
             await ctx.Channel.SendMessageAsync((numberOne + numberTwo).ToString()).ConfigureAwait(false);

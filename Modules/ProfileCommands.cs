@@ -35,17 +35,24 @@ namespace PabloBot.Modules
 
         private async Task GetProfileToDisplayAsync(CommandContext ctx, ulong memberId)
         {
-            Profile profile = await _profileService.GetOrCreateProfileAsync(memberId, ctx.Guild.Id);
-            DiscordMember member = ctx.Guild.Members[profile.DiscordId];
-            var profileEmbed = new DiscordEmbedBuilder
+            try
             {
-                Title = $"{member.DisplayName}'s Profile",
-                ImageUrl = member.AvatarUrl
-            };
+                Profile profile = await _profileService.GetOrCreateProfileAsync(memberId, ctx.Guild.Id);
+                DiscordMember member = ctx.Guild.Members[profile.DiscordId];
+                var profileEmbed = new DiscordEmbedBuilder
+                {
+                    Title = $"{member.DisplayName}'s Profile",
+                    ImageUrl = member.AvatarUrl
+                };
 
-            profileEmbed.AddField("Xp", profile.Xp.ToString());
+                profileEmbed.AddField("Xp", profile.Xp.ToString());
 
-            await ctx.Channel.SendMessageAsync(embed: profileEmbed).ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync(embed: profileEmbed).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Ошибка: " + e);
+            }
         }
     }
 }

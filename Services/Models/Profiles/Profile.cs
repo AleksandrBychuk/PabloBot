@@ -11,5 +11,7 @@ namespace PabloBot.Services.Models.Profiles
         public ulong DiscordId { get; set; }
         public ulong GuildId { get; set; }
         public int Xp { get; set; }
+        public int Level => Xp / 100;
+        public int Warns { get; set; }
     }
 }
