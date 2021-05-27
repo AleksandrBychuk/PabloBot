@@ -12,5 +12,6 @@ namespace PabloBot.Services.Models
     {
         public PabloContext(DbContextOptions<PabloContext> options) : base(options) { }
         public DbSet<Profile> Profiles { get; set; }
+        public DbSet<Badword> Badwords { get; set; }
     }
 }

@@ -44,6 +44,13 @@ namespace PabloBot.Modules
                 await member.RemoveAsync().ConfigureAwait(false);
         }
 
+        [Command("bw"), Description("Команда для добавления слов в черный список.")]
+        [RequireRoles(RoleCheckMode.Any, "Администрация", "Модерация")]
+        public async Task Badwords(CommandContext ctx, [DescriptionAttribute("Слово для добавления.")] string word)
+        {
+            throw new ArgumentNullException();
+        }
+
         [Command("warn"), Description("Команда для выдачи варна пользователя.")]
         [RequireRoles(RoleCheckMode.Any, "Администрация", "Модерация")]
         public async Task Warn(CommandContext ctx, [DescriptionAttribute("Выбранный пользователь для выдачи варна.")] DiscordMember member)

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using DSharpPlus.Interactivity;
 using DSharpPlus.EventArgs;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.VoiceNext;
+using DSharpPlus.Lavalink;
+using DSharpPlus.Net;
 using DSharpPlus;
 using System.IO;
 using Newtonsoft.Json;
@@ -24,6 +27,7 @@ namespace PabloBot
     {
         public DiscordClient Client { get; set; }
         public CommandsNextExtension Commands { get; set; }
+        public VoiceNextExtension Voice { get; set; }      
         public InteractivityExtension Interactivity { get; set; }
 
         public PabloBot(IServiceProvider services)
@@ -68,6 +72,13 @@ namespace PabloBot
                 Services = services
             };
 
+            var voiceConfig = new VoiceNextConfiguration
+            {
+                EnableIncoming = false,
+                AudioFormat = AudioFormat.Default
+            };
+
+            Voice = Client.UseVoiceNext(voiceConfig);
             Commands = Client.UseCommandsNext(commandsConfig);
 
             Commands.RegisterCommands<DefaultCommands>();
@@ -84,26 +95,12 @@ namespace PabloBot
 
         private async Task OnMemberInvited(DiscordClient s, GuildMemberAddEventArgs e)
         {
-            try
-            {
-                await e.Guild.GetChannel(711590425483411509).SendMessageAsync($"Здарова {e.Member.Mention}, и пошёл нахуй!").ConfigureAwait(false);
-            }
-            catch (Exception d)
-            {
-                Console.WriteLine("ОШИБКА С ЗАХОДОМ: " + d);
-            }
+            await e.Guild.GetChannel(711590425483411509).SendMessageAsync($"Привет {e.Member.Mention}, чувствуй себя как дома!").ConfigureAwait(false);
         }
 
         private async Task OnMemberUninvited(DiscordClient s, GuildMemberRemoveEventArgs e)
         {
-            try
-            {
-                await e.Guild.GetChannel(711590425483411509).SendMessageAsync($"Пока {e.Member.Mention}, и пошёл нахуй!").ConfigureAwait(false);
-            }
-            catch (Exception d)
-            {
-                Console.WriteLine("ОШИБКА С ВЫХОДОМ: " + d);
-            }
+            await e.Guild.GetChannel(711590425483411509).SendMessageAsync($"Пока {e.Member.Mention}. Надеюсь ты ещё вернешься к нам!").ConfigureAwait(false);
         }
 
         private async Task OnMessageReceived(DiscordClient s, MessageCreateEventArgs e)
@@ -111,7 +108,7 @@ namespace PabloBot
             if (e.Message.Content.ToLower().Contains("pidor"))
             {
                 await e.Message.DeleteAsync();
-                var hardMessage = await e.Channel.SendMessageAsync($"{e.Author.Mention} stop fucking write bad words. Fucking slut!").ConfigureAwait(false);
+                var hardMessage = await e.Channel.SendMessageAsync($"{e.Author.Mention} не стоит писать подобные слова!").ConfigureAwait(false);
                 await Task.Factory.StartNew(async () =>
                 {
                     await Task.Delay(5000);

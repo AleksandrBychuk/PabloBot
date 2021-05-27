@@ -2,16 +2,26 @@
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.VoiceNext;
+using DSharpPlus.Lavalink;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DSharpPlus;
+using System.IO;
+using System.Diagnostics;
 
 namespace PabloBot.Modules
 {
     public class DefaultCommands : BaseCommandModule
     {
+        public DefaultCommands()
+        {
+            
+        }
+
         [Command("ping")]
         public async Task Ping(CommandContext ctx)
         {
@@ -35,14 +45,7 @@ namespace PabloBot.Modules
         {
             var role = ctx.Guild.GetRole(711590788341170247);
             await ctx.Channel.SendMessageAsync("Success!").ConfigureAwait(false);
-            try
-            {
-                await ctx.Member.GrantRoleAsync(role).ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            await ctx.Member.GrantRoleAsync(role).ConfigureAwait(false);
         }
 
         [Command("poll")]
@@ -64,6 +67,25 @@ namespace PabloBot.Modules
             {
                 await pollMessage.CreateReactionAsync(optionBuilder).ConfigureAwait(false);
             }
+        }
+
+        [Command("play")]
+        public async Task Play(CommandContext ctx, [RemainingText] string search)
+        {
+            try {
+
+                if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+                {
+                    await ctx.RespondAsync("Вас нет в голосовом канале.");
+                    return;
+                }
+
+                await ctx.RespondAsync("Now playing Two Tone Rebel — E - Dubble").ConfigureAwait(false);
+
+                await ctx.Member.VoiceState.Channel.ConnectAsync();
+
+            }
+            catch (Exception e) { Console.WriteLine(e); }
         }
     }
 }
