@@ -72,20 +72,82 @@ namespace PabloBot.Modules
         [Command("play")]
         public async Task Play(CommandContext ctx, [RemainingText] string search)
         {
-            try {
-
-                if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
-                {
-                    await ctx.RespondAsync("Вас нет в голосовом канале.");
-                    return;
-                }
-
-                await ctx.RespondAsync("Now playing Two Tone Rebel — E - Dubble").ConfigureAwait(false);
-
-                await ctx.Member.VoiceState.Channel.ConnectAsync();
-
+            if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+            {
+                await ctx.RespondAsync("Вас не в голосовом канале.");
+                return;
             }
-            catch (Exception e) { Console.WriteLine(e); }
+
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (conn == null)
+            {
+                await ctx.RespondAsync("Lavalink is not connected.");
+                return;
+            }
+
+            var loadResult = await node.Rest.GetTracksAsync(search);
+
+            if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
+                || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+            {
+                await ctx.RespondAsync($"Ошибка поиска {search}.");
+                return;
+            }
+
+            var track = loadResult.Tracks.First();
+
+            await conn.PlayAsync(track);
+
+            await ctx.RespondAsync($"Now playing {track.Title}!");
         }
+
+        [Command("leave")]
+        public async Task Leave(CommandContext ctx, DiscordChannel channel)
+        {
+            var lava = ctx.Client.GetLavalink();
+            if (!lava.ConnectedNodes.Any())
+            {
+                await ctx.RespondAsync("The Lavalink connection is not established");
+                return;
+            }
+
+            var node = lava.ConnectedNodes.Values.First();
+
+            if (channel.Type != ChannelType.Voice)
+            {
+                await ctx.RespondAsync("Ошибка голосового канала.");
+                return;
+            }
+
+            var conn = node.GetGuildConnection(channel.Guild);
+
+            if (conn == null)
+            {
+                await ctx.RespondAsync("Lavalink is not connected.");
+                return;
+            }
+
+            await conn.DisconnectAsync();
+        }
+
+        //[Command("play")]
+        //public async Task Play(CommandContext ctx, [RemainingText] string search)
+        //{
+        //    try {
+
+        //        if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+        //        {
+        //            await ctx.RespondAsync("Вас нет в голосовом канале.");
+        //            return;
+        //        }
+
+        //        await ctx.Member.VoiceState.Channel.ConnectAsync();
+
+        //    }
+        //    catch (Exception e) { Console.WriteLine(e); }
+        //}
     }
 }

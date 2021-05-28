@@ -45,7 +45,7 @@ namespace PabloBot.Modules
                     ImageUrl = member.AvatarUrl
                 };
 
-                profileEmbed.AddField("Xp", profile.Xp.ToString());
+                profileEmbed.AddField("Level", profile.Level.ToString());
 
                 await ctx.Channel.SendMessageAsync(embed: profileEmbed).ConfigureAwait(false);
             }

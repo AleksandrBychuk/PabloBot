@@ -20,6 +20,9 @@ using Microsoft.Extensions.DependencyInjection;
 using PabloBot.Services.Models.Profiles.Services;
 using DSharpPlus.Entities;
 using System.Threading;
+using PabloBot.Services.Models;
+using Microsoft.EntityFrameworkCore;
+using PabloBot.Services.Models.Profiles;
 
 namespace PabloBot
 {
@@ -29,9 +32,11 @@ namespace PabloBot
         public CommandsNextExtension Commands { get; set; }
         public VoiceNextExtension Voice { get; set; }      
         public InteractivityExtension Interactivity { get; set; }
+        private readonly PabloContext _context;
 
         public PabloBot(IServiceProvider services)
         {
+            _context = new PabloContext(services.GetRequiredService<DbContextOptions<PabloContext>>());
             var json = string.Empty;
             using (var fs = File.OpenRead("config.json"))
             {
@@ -63,6 +68,19 @@ namespace PabloBot
                 Timeout = TimeSpan.FromMinutes(2)
             });
 
+            var endpoint = new ConnectionEndpoint
+            {
+                Hostname = "127.0.0.1",
+                Port = 2333
+            };
+
+            var lavalinkConfig = new LavalinkConfiguration
+            {
+                Password = "youshallnotpass",
+                RestEndpoint = endpoint,
+                SocketEndpoint = endpoint
+            };
+
             var commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { configJson.Prefix },
@@ -77,6 +95,9 @@ namespace PabloBot
                 EnableIncoming = false,
                 AudioFormat = AudioFormat.Default
             };
+
+            var lavalink = Client.UseLavalink();
+            lavalink.ConnectAsync(lavalinkConfig);
 
             Voice = Client.UseVoiceNext(voiceConfig);
             Commands = Client.UseCommandsNext(commandsConfig);
@@ -95,6 +116,8 @@ namespace PabloBot
 
         private async Task OnMemberInvited(DiscordClient s, GuildMemberAddEventArgs e)
         {
+            ProfileService profileService = new ProfileService(_context);
+            await profileService.GetOrCreateProfileAsync(e.Member.Id, e.Guild.Id).ConfigureAwait(false);
             await e.Guild.GetChannel(711590425483411509).SendMessageAsync($"Привет {e.Member.Mention}, чувствуй себя как дома!").ConfigureAwait(false);
         }
 
@@ -103,18 +126,25 @@ namespace PabloBot
             await e.Guild.GetChannel(711590425483411509).SendMessageAsync($"Пока {e.Member.Mention}. Надеюсь ты ещё вернешься к нам!").ConfigureAwait(false);
         }
 
-        private async Task OnMessageReceived(DiscordClient s, MessageCreateEventArgs e)
+        public async Task OnMessageReceived(DiscordClient s, MessageCreateEventArgs e)
         {
-            if (e.Message.Content.ToLower().Contains("pidor"))
+            var badWord = await ((IAsyncEnumerable<Badword>)_context.Badwords).ToListAsync().ConfigureAwait(false);
+            foreach (var bw in badWord)
             {
-                await e.Message.DeleteAsync();
-                var hardMessage = await e.Channel.SendMessageAsync($"{e.Author.Mention} не стоит писать подобные слова!").ConfigureAwait(false);
-                await Task.Factory.StartNew(async () =>
+                if (e.Message.Content.ToLower().Contains(bw.Word.ToString()))
                 {
-                    await Task.Delay(5000);
-                    await e.Channel.DeleteMessageAsync(hardMessage).ConfigureAwait(false);
-                });
+                    await e.Message.DeleteAsync();
+                    var hardMessage = await e.Channel.SendMessageAsync($"{e.Author.Mention} не стоит писать подобные слова!").ConfigureAwait(false);
+                    await Task.Factory.StartNew(async () =>
+                    {
+                        await Task.Delay(5000);
+                        await e.Channel.DeleteMessageAsync(hardMessage).ConfigureAwait(false);
+                    });
+                }
             }
+            var profile = await ((IAsyncEnumerable<Profile>)_context.Profiles).FirstOrDefaultAsync(p => e.Author.Id == e.Author.Id && p.GuildId == e.Guild.Id).ConfigureAwait(false);
+            profile.Xp += 10;
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }
