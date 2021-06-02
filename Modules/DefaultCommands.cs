@@ -72,19 +72,37 @@ namespace PabloBot.Modules
         [Command("play")]
         public async Task Play(CommandContext ctx, [RemainingText] string search)
         {
+            var lava = ctx.Client.GetLavalink();
+            if (!lava.ConnectedNodes.Any())
+            {
+                await ctx.RespondAsync("Нет стабильного соединения Lavalink!");
+                return;
+            }
+
+            var node = lava.ConnectedNodes.Values.First();
+
+            var channel = ctx.Member.Guild.GetChannel(ctx.Member.VoiceState.Channel.Id);
+
+            if (channel.Type != ChannelType.Voice)
+            {
+                await ctx.RespondAsync("Данный канал не является голосовым!");
+                return;
+            }
+
+
             if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
             {
                 await ctx.RespondAsync("Вас не в голосовом канале.");
                 return;
             }
 
-            var lava = ctx.Client.GetLavalink();
-            var node = lava.ConnectedNodes.Values.First();
+            await node.ConnectAsync(channel);
+
             var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
 
             if (conn == null)
             {
-                await ctx.RespondAsync("Lavalink is not connected.");
+                await ctx.RespondAsync("Lavalink не подключен.");
                 return;
             }
 
@@ -105,12 +123,13 @@ namespace PabloBot.Modules
         }
 
         [Command("leave")]
-        public async Task Leave(CommandContext ctx, DiscordChannel channel)
+        public async Task Leave(CommandContext ctx)
         {
+            var channel = ctx.Member.Guild.GetChannel(ctx.Member.VoiceState.Channel.Id);
             var lava = ctx.Client.GetLavalink();
             if (!lava.ConnectedNodes.Any())
             {
-                await ctx.RespondAsync("The Lavalink connection is not established");
+                await ctx.RespondAsync("Нет стабильного соединения Lavalink!");
                 return;
             }
 
@@ -118,7 +137,7 @@ namespace PabloBot.Modules
 
             if (channel.Type != ChannelType.Voice)
             {
-                await ctx.RespondAsync("Ошибка голосового канала.");
+                await ctx.RespondAsync("Данный канал не является голосовым!");
                 return;
             }
 
@@ -126,28 +145,11 @@ namespace PabloBot.Modules
 
             if (conn == null)
             {
-                await ctx.RespondAsync("Lavalink is not connected.");
+                await ctx.RespondAsync("Lavalink не подключен!");
                 return;
             }
 
             await conn.DisconnectAsync();
         }
-
-        //[Command("play")]
-        //public async Task Play(CommandContext ctx, [RemainingText] string search)
-        //{
-        //    try {
-
-        //        if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
-        //        {
-        //            await ctx.RespondAsync("Вас нет в голосовом канале.");
-        //            return;
-        //        }
-
-        //        await ctx.Member.VoiceState.Channel.ConnectAsync();
-
-        //    }
-        //    catch (Exception e) { Console.WriteLine(e); }
-        //}
     }
 }

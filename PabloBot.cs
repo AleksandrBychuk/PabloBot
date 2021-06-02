@@ -23,6 +23,7 @@ using System.Threading;
 using PabloBot.Services.Models;
 using Microsoft.EntityFrameworkCore;
 using PabloBot.Services.Models.Profiles;
+using System.Data;
 
 namespace PabloBot
 {
@@ -97,7 +98,6 @@ namespace PabloBot
             };
 
             var lavalink = Client.UseLavalink();
-            lavalink.ConnectAsync(lavalinkConfig);
 
             Voice = Client.UseVoiceNext(voiceConfig);
             Commands = Client.UseCommandsNext(commandsConfig);
@@ -107,6 +107,14 @@ namespace PabloBot
             Commands.RegisterCommands<AdminCommands>();
 
             Client.ConnectAsync();
+            LvlConn(lavalink, lavalinkConfig).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task LvlConn(LavalinkExtension lvl, LavalinkConfiguration conf)
+        {
+            await Task.Delay(5000);
+            await lvl.ConnectAsync(conf);
+            await Task.Delay(-1);
         }
 
         private Task OnClientReady(DiscordClient s, ReadyEventArgs e)
@@ -142,9 +150,18 @@ namespace PabloBot
                     });
                 }
             }
-            var profile = await ((IAsyncEnumerable<Profile>)_context.Profiles).FirstOrDefaultAsync(p => e.Author.Id == e.Author.Id && p.GuildId == e.Guild.Id).ConfigureAwait(false);
-            profile.Xp += 10;
-            await _context.SaveChangesAsync().ConfigureAwait(false);
+            await Task.Factory.StartNew(async () => 
+            {
+                if (!e.Author.IsBot)
+                {
+                    Profile profile = await ((IAsyncEnumerable<Profile>)_context.Profiles).Where(p => p.GuildId == e.Guild.Id).FirstOrDefaultAsync(p => p.DiscordId == e.Author.Id).ConfigureAwait(false);
+                    if (profile != null)
+                    {
+                        profile.Xp += 10;
+                        await _context.SaveChangesAsync().ConfigureAwait(false);
+                    }
+                }
+            });
         }
     }
 }
